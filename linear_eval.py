@@ -20,8 +20,8 @@ parser.add_argument('--epochs', default=100, type=int,
                     help='number of epochs to train the linear classifier')
 parser.add_argument('-b', '--batch-size', default=256, type=int,
                     help='batch size for linear evaluation')
-parser.add_argument('--lr', default=3e-4, type=float,
-                    help='learning rate for the linear classifier')
+parser.add_argument('--lr', default=0.1, type=float,
+                    help='learning rate for the linear classifier (SGD, default 0.1)')
 parser.add_argument('-j', '--workers', default=2, type=int,
                     help='number of data loading workers')
 parser.add_argument('--seed', default=42, type=int,
@@ -33,10 +33,17 @@ parser.add_argument('--disable-cuda', action='store_true',
 def get_data_loaders(dataset_name, data_path, batch_size, workers):
     """
     Load labeled train and test splits for linear evaluation.
-    No augmentation is applied — just ToTensor() — because we are evaluating
-    frozen representations, not training them.
+    Applies standard per-channel normalization as specified in proposal Section 4.2.
+    No other augmentation — we evaluate frozen representations as-is.
     """
-    transform = transforms.ToTensor()
+    # Per-channel mean and std for standard normalization
+    NORMALIZE = {
+        'cifar10': transforms.Normalize(mean=(0.4914, 0.4822, 0.4465),
+                                        std=(0.2023, 0.1994, 0.2010)),
+        'stl10':   transforms.Normalize(mean=(0.4467, 0.4398, 0.4066),
+                                        std=(0.2242, 0.2215, 0.2239)),
+    }
+    transform = transforms.Compose([transforms.ToTensor(), NORMALIZE[dataset_name]])
 
     if dataset_name == 'cifar10':
         train_dataset = datasets.CIFAR10(data_path, train=True, download=True, transform=transform)
@@ -132,7 +139,8 @@ def main():
     print(f"=> Encoder frozen. Training only fc layer "
           f"({sum(p.numel() for p in trainable):,} parameters)")
 
-    optimizer = torch.optim.Adam(trainable, lr=args.lr, weight_decay=0.0008)
+    # SGD with momentum 0.9 as specified in proposal Section 4.2
+    optimizer = torch.optim.SGD(trainable, lr=args.lr, momentum=0.9)
     criterion = nn.CrossEntropyLoss().to(device)
 
     train_loader, test_loader = get_data_loaders(
