@@ -200,6 +200,27 @@ def main():
 
     print(f"\nBest Test Top-1 Accuracy: {best_top1:.2f}%")
 
+    # Save results to a CSV so they persist even if the notebook session ends
+    import csv, datetime
+    results_path = "linear_eval_results.csv"
+    write_header = not os.path.exists(results_path)
+    with open(results_path, "a", newline="") as f:
+        writer = csv.writer(f)
+        if write_header:
+            writer.writerow(["timestamp", "checkpoint", "dataset", "arch",
+                             "epochs", "lr", "seed", "best_top1"])
+        writer.writerow([
+            datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+            args.checkpoint,
+            args.dataset,
+            args.arch,
+            args.epochs,
+            args.lr,
+            args.seed,
+            f"{best_top1:.2f}",
+        ])
+    print(f"Results saved to {results_path}")
+
 
 if __name__ == '__main__':
     main()
