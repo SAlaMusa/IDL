@@ -14,14 +14,17 @@ class LARS(torch.optim.Optimizer):
 
     where lr is the global (base) learning rate set by the scheduler.
 
+    Bias and BatchNorm parameters (ndim <= 1) are excluded from LARS scaling
+    and weight decay — this is standard practice and matches the original paper.
+
     Reference: You et al., "Large Batch Training of Convolutional Networks", 2017.
 
     Args:
-        params:         model parameters
-        lr:             base learning rate (will be scaled by scheduler)
-        weight_decay:   L2 regularization coefficient (default: 1e-6 per proposal)
-        momentum:       SGD momentum (default: 0.9)
-        eta:            LARS trust coefficient (default: 0.001)
+        params:              model parameters
+        lr:                  base learning rate (scaled by scheduler)
+        weight_decay:        L2 regularization coefficient (default: 1e-6 per proposal)
+        momentum:            SGD momentum (default: 0.9)
+        eta:                 LARS trust coefficient (default: 0.001)
         exclude_bias_and_bn: if True, skip LARS scaling for bias/BN params (recommended)
     """
 
@@ -31,11 +34,6 @@ class LARS(torch.optim.Optimizer):
                         eta=eta, exclude_bias_and_bn=exclude_bias_and_bn)
         super(LARS, self).__init__(params, defaults)
 
-    @staticmethod
-    def _is_bias_or_bn(param, param_name):
-        """Bias and BatchNorm parameters should not be LARS-scaled or weight-decayed."""
-        return param.ndim <= 1 or 'bias' in param_name or 'bn' in param_name
-
     @torch.no_grad()
     def step(self, closure=None):
         loss = None
@@ -44,10 +42,7 @@ class LARS(torch.optim.Optimizer):
                 loss = closure()
 
         for group in self.param_groups:
-            for name, p in zip(
-                [n for pg in self.param_groups for n in pg.get('names', [''])],
-                group['params']
-            ):
+            for p in group['params']:
                 if p.grad is None:
                     continue
 
@@ -57,24 +52,20 @@ class LARS(torch.optim.Optimizer):
                 eta = group['eta']
                 lr = group['lr']
 
-                # Determine if this param should skip LARS scaling / weight decay
+                # Bias and BN parameters (1-D tensors) skip LARS scaling and weight decay
                 skip = group['exclude_bias_and_bn'] and p.ndim <= 1
 
                 if not skip:
-                    # LARS local learning rate
                     param_norm = torch.norm(p)
                     grad_norm = torch.norm(grad)
-                    # Avoid division by zero
                     if param_norm > 0 and grad_norm > 0:
                         local_lr = eta * param_norm / (grad_norm + weight_decay * param_norm)
                     else:
                         local_lr = 1.0
-                    # Apply weight decay and local scaling to gradient
                     grad = grad.add(p, alpha=weight_decay)
                     grad = grad.mul(local_lr)
-                # Else: apply gradient as-is (no LARS, no weight decay for bias/BN)
 
-                # SGD with momentum
+                # SGD momentum update
                 state = self.state[p]
                 if 'momentum_buffer' not in state:
                     state['momentum_buffer'] = torch.zeros_like(p)

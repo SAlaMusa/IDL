@@ -6,12 +6,21 @@ from exceptions.exceptions import InvalidBackboneError
 
 class ResNetSimCLR(nn.Module):
 
-    def __init__(self, base_model, out_dim):
+    def __init__(self, base_model, out_dim, cifar_stem=False):
         super(ResNetSimCLR, self).__init__()
         self.resnet_dict = {"resnet18": models.resnet18(weights=None, num_classes=out_dim),
                             "resnet50": models.resnet50(weights=None, num_classes=out_dim)}
 
         self.backbone = self._get_basemodel(base_model)
+
+        if cifar_stem:
+            # Standard ResNet uses 7x7 conv stride 2 + maxpool, designed for 224x224 images.
+            # On 32x32 CIFAR-10 this immediately shrinks feature maps to 4x4, losing too much
+            # spatial information. Replace with 3x3 conv stride 1 + no maxpool so feature maps
+            # stay at 8x8 through the residual blocks, matching the SimCLR paper's CIFAR setup.
+            self.backbone.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False)
+            self.backbone.maxpool = nn.Identity()
+
         dim_mlp = self.backbone.fc.in_features
 
         # add mlp projection head

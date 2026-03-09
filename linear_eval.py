@@ -59,7 +59,7 @@ def get_data_loaders(dataset_name, data_path, batch_size, workers):
     return train_loader, test_loader
 
 
-def load_encoder(arch, checkpoint_path, device, num_classes=10):
+def load_encoder(arch, checkpoint_path, device, num_classes=10, cifar_stem=False):
     """
     Build a standard ResNet, then load the SimCLR pretrained encoder weights into it.
 
@@ -70,11 +70,19 @@ def load_encoder(arch, checkpoint_path, device, num_classes=10):
     We strip the 'backbone.' prefix and skip 'backbone.fc.*' so only the
     convolutional encoder is loaded. The fresh fc layer (classifier) is left
     randomly initialized and will be the only thing we train.
+
+    cifar_stem must match what was used during pretraining. If the checkpoint was
+    trained with cifar_stem=True (3x3 conv, no maxpool), the eval model must use
+    the same stem — otherwise conv1.weight shapes won't match and loading will fail.
     """
     if arch == 'resnet18':
         model = models.resnet18(weights=None, num_classes=num_classes).to(device)
     else:
         model = models.resnet50(weights=None, num_classes=num_classes).to(device)
+
+    if cifar_stem:
+        model.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False).to(device)
+        model.maxpool = nn.Identity()
 
     checkpoint = torch.load(checkpoint_path, map_location=device)
     state_dict = checkpoint['state_dict']
@@ -127,7 +135,10 @@ def main():
     print(f"=> Loading checkpoint: {args.checkpoint}")
     print(f"=> Dataset: {args.dataset}  |  Arch: {args.arch}  |  Device: {device}")
 
-    model = load_encoder(args.arch, args.checkpoint, device, num_classes=10)
+    # CIFAR-10 checkpoints are trained with a 3x3 stem — eval model must match
+    cifar_stem = (args.dataset == 'cifar10')
+    model = load_encoder(args.arch, args.checkpoint, device, num_classes=10,
+                         cifar_stem=cifar_stem)
 
     # Freeze everything except the linear classifier head
     for name, param in model.named_parameters():
@@ -141,6 +152,8 @@ def main():
 
     # SGD with momentum 0.9 as specified in proposal Section 4.2
     optimizer = torch.optim.SGD(trainable, lr=args.lr, momentum=0.9)
+    # Cosine decay over full eval training — standard protocol for linear eval comparability
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs, eta_min=0)
     criterion = nn.CrossEntropyLoss().to(device)
 
     train_loader, test_loader = get_data_loaders(
@@ -161,6 +174,7 @@ def main():
             loss.backward()
             optimizer.step()
         top1_train = top1_train_sum / (i + 1)
+        scheduler.step()
 
         # --- Evaluate on test set ---
         model.eval()

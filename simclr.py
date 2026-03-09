@@ -92,8 +92,16 @@ class SimCLR(object):
 
                 n_iter += 1
 
-            # warmup for the first 10 epochs
-            if epoch_counter >= 10:
+            # Linear warmup for first warmup_epochs, then cosine decay.
+            # During warmup we manually scale the LR from 0 → base_lr linearly.
+            # After warmup the cosine scheduler takes over.
+            warmup_epochs = getattr(self.args, 'warmup_epochs', 10)
+            if epoch_counter < warmup_epochs:
+                # Linear warmup: scale from 0 to base lr
+                warmup_scale = (epoch_counter + 1) / warmup_epochs
+                for pg in self.optimizer.param_groups:
+                    pg['lr'] = self.args.lr * warmup_scale
+            else:
                 self.scheduler.step()
             logging.debug(f"Epoch: {epoch_counter}\tLoss: {loss}\tTop1 accuracy: {top1[0]}")
 
