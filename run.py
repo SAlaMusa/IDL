@@ -70,8 +70,10 @@ def main():
     pre_parser.add_argument('--config', default=None)
     pre_args, _ = pre_parser.parse_known_args()
 
+    aug_cfg = {}
     if pre_args.config is not None:
         config = load_config(pre_args.config)
+        aug_cfg = config.get('aug', {}) or {}
         parser.set_defaults(**{
             'dataset_name':      config.get('dataset_name', 'stl10'),
             'arch':              config.get('arch', 'resnet18'),
@@ -107,7 +109,10 @@ def main():
         args.gpu_index = -1
 
     dataset = ContrastiveLearningDataset(args.data)
-    train_dataset = dataset.get_dataset(args.dataset_name, args.n_views)
+    if aug_cfg:
+        active = [k for k, v in aug_cfg.items() if isinstance(v, bool)]
+        print(f"=> Aug recipe: {aug_cfg}")
+    train_dataset = dataset.get_dataset(args.dataset_name, args.n_views, aug_cfg=aug_cfg)
 
     train_loader = torch.utils.data.DataLoader(
         train_dataset, batch_size=args.batch_size, shuffle=True,
