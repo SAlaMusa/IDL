@@ -1,0 +1,36 @@
+# SimCLR Baseline — CIFAR-10 (Confirmatory)
+
+# Matches proposal Section 4.2 exactly.
+# Use for confirmatory runs (3 seeds, report mean ± std).
+# For screening runs, override: --epochs 200
+
+dataset_name: cifar10
+arch: resnet18
+
+# Training — matches proposal Section 4.2
+epochs: 800
+warmup_epochs: 10
+batch_size: 512
+
+# lr is computed as 0.3 * batch_size / 256 = 0.6 when batch_size=512.
+# Leave unset (null) to use the automatic scaling formula in run.py.
+# Set explicitly only if you want to override the formula.
+lr: null
+
+weight_decay: 0.000001   # 1e-6 as specified in proposal
+temperature: 0.07
+seed: 42
+
+# Projection head output dimension
+out_dim: 128
+
+# Always 2 for standard SimCLR
+n_views: 2
+
+# PSC A100: can use more workers. On Kaggle keep at 2.
+workers: 2
+
+# Mixed precision — recommended for A100/T4/P100
+fp16_precision: true
+
+log_every_n_steps: 100

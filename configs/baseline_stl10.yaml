@@ -1,0 +1,32 @@
+# SimCLR Baseline — STL-10 (Confirmatory)
+
+# Matches proposal Section 4.2 exactly.
+# STL-10 uses 96x96 images and 100k unlabeled images for pretraining.
+# For screening runs, override: --epochs 200
+
+dataset_name: stl10
+arch: resnet18
+
+# Training — matches proposal Section 4.2
+epochs: 800
+warmup_epochs: 10
+batch_size: 512
+
+# lr = 0.3 * 512 / 256 = 0.6 (auto-computed in run.py when set to null)
+lr: null
+
+weight_decay: 0.000001   # 1e-6 as specified in proposal
+temperature: 0.07
+seed: 42
+
+# Projection head output dimension
+out_dim: 128
+
+n_views: 2
+
+# PSC A100: can use more workers. On Kaggle keep at 2.
+workers: 2
+
+fp16_precision: true
+
+log_every_n_steps: 100
