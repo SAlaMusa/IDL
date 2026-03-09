@@ -1,0 +1,25 @@
+# Ablation: No random resized crop
+# RandomResizedCrop replaced with Resize(32). All other augmentations intact.
+# Research question: how much does crop-induced scale/position variance contribute?
+
+dataset_name: cifar10
+arch: resnet18
+epochs: 200
+warmup_epochs: 10
+batch_size: 256
+lr: null
+weight_decay: 0.000001
+temperature: 0.07
+seed: 42
+out_dim: 128
+n_views: 2
+workers: 2
+fp16_precision: true
+log_every_n_steps: 100
+
+aug:
+  crop: false       # Resize(32) instead of RandomResizedCrop
+  flip: true
+  jitter: true
+  grayscale: true
+  blur: true
