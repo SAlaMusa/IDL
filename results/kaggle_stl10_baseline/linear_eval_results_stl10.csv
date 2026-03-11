@@ -1,0 +1,2 @@
+timestamp,checkpoint,dataset,arch,epochs,lr,seed,best_top1
+2026-03-10 14:43,/kaggle/working/stl10_resnet18_ep100_seed42.pth.tar,stl10,resnet18,100,0.1,42,68.03
