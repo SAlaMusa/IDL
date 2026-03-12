@@ -1,0 +1,2 @@
+timestamp,checkpoint,dataset,arch,epochs,lr,seed,best_top1
+2026-03-11 23:12,/kaggle/working/cifar10_resnet18_ep200_seed42.pth.tar,cifar10,resnet18,100,0.1,42,76.36
