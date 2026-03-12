@@ -1,0 +1,5 @@
+exp_name,config,best_top1,checkpoint,timestamp
+pair_crop_jitter,configs/pair_crop_jitter.yaml,74.22,/kaggle/working/pair_crop_jitter_ep200.pth.tar,2026-03-12 01:24
+pair_crop_grayscale,configs/pair_crop_grayscale.yaml,72.33,/kaggle/working/pair_crop_grayscale_ep200.pth.tar,2026-03-12 03:46
+pair_crop_blur,configs/pair_crop_blur.yaml,59.03,/kaggle/working/pair_crop_blur_ep200.pth.tar,2026-03-12 08:03
+pair_jitter_grayscale,configs/pair_jitter_grayscale.yaml,41.87,/kaggle/working/pair_jitter_grayscale_ep200.pth.tar,2026-03-12 10:31
