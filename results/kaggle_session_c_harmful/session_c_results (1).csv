@@ -1,0 +1,3 @@
+exp_name,config,best_top1,checkpoint,timestamp
+harmful_rotation180,configs/harmful_rotation180.yaml,65.53,/kaggle/working/harmful_rotation180_ep200.pth.tar,2026-03-11 20:30
+harmful_noise,configs/harmful_noise.yaml,62.42,/kaggle/working/harmful_noise_ep200.pth.tar,2026-03-12 02:03

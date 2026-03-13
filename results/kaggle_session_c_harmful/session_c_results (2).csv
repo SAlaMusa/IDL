@@ -1,0 +1,2 @@
+exp_name,config,best_top1,checkpoint,timestamp
+harmful_solarize,configs/harmful_solarize.yaml,78.31,/kaggle/working/harmful_solarize_ep200.pth.tar,2026-03-12 11:14
