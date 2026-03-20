@@ -1,6 +1,6 @@
 exp_name,config,best_top1,checkpoint,timestamp
-ablation_no_crop,configs/ablation_no_crop.yaml,47.70,/content/drive/MyDrive/simclr_ablations/ablation_no_crop_ep100.pth.tar,2026-03-13 23:19
-ablation_no_flip,configs/ablation_no_flip.yaml,74.42,/content/drive/MyDrive/simclr_ablations/ablation_no_flip_ep100.pth.tar,2026-03-13 23:58
-ablation_no_jitter,configs/ablation_no_jitter.yaml,68.23,/content/drive/MyDrive/simclr_ablations/ablation_no_jitter_ep100.pth.tar,2026-03-14 00:27
-ablation_no_grayscale,configs/ablation_no_grayscale.yaml,69.79,/content/drive/MyDrive/simclr_ablations/ablation_no_grayscale_ep100.pth.tar,2026-03-14 01:07
-ablation_no_blur,configs/ablation_no_blur.yaml,74.56,/content/drive/MyDrive/simclr_ablations/ablation_no_blur_ep100.pth.tar,2026-03-14 01:23
+ablation_no_crop,configs/ablation_no_crop.yaml,48.97,/content/drive/MyDrive/simclr_ablations/ablation_no_crop_ep200.pth.tar,2026-03-20 12:09
+ablation_no_flip,configs/ablation_no_flip.yaml,75.73,/content/drive/MyDrive/simclr_ablations/ablation_no_flip_ep200.pth.tar,2026-03-20 13:36
+ablation_no_jitter,configs/ablation_no_jitter.yaml,70.83,/content/drive/MyDrive/simclr_ablations/ablation_no_jitter_ep200.pth.tar,2026-03-20 14:39
+ablation_no_grayscale,configs/ablation_no_grayscale.yaml,72.61,/content/drive/MyDrive/simclr_ablations/ablation_no_grayscale_ep200.pth.tar,2026-03-20 16:05
+ablation_no_blur,configs/ablation_no_blur.yaml,76.71,/content/drive/MyDrive/simclr_ablations/ablation_no_blur_ep200.pth.tar,2026-03-20 16:41
