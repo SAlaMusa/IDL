@@ -6,7 +6,7 @@ from exceptions.exceptions import InvalidBackboneError
 
 class ResNetSimCLR(nn.Module):
 
-    def __init__(self, base_model, out_dim, cifar_stem=False):
+    def __init__(self, base_model, out_dim, cifar_stem=False, proj_head='mlp2'):
         super(ResNetSimCLR, self).__init__()
         self.resnet_dict = {"resnet18": models.resnet18(weights=None, num_classes=out_dim),
                             "resnet50": models.resnet50(weights=None, num_classes=out_dim)}
@@ -23,8 +23,20 @@ class ResNetSimCLR(nn.Module):
 
         dim_mlp = self.backbone.fc.in_features
 
-        # add mlp projection head
-        self.backbone.fc = nn.Sequential(nn.Linear(dim_mlp, dim_mlp), nn.ReLU(), self.backbone.fc)
+        if proj_head == 'none':
+            self.backbone.fc = nn.Identity()
+        elif proj_head == 'linear':
+            self.backbone.fc = nn.Linear(dim_mlp, out_dim)
+        elif proj_head == 'mlp2':
+            self.backbone.fc = nn.Sequential(
+                nn.Linear(dim_mlp, dim_mlp), nn.ReLU(), nn.Linear(dim_mlp, out_dim))
+        elif proj_head == 'mlp3':
+            self.backbone.fc = nn.Sequential(
+                nn.Linear(dim_mlp, dim_mlp), nn.ReLU(),
+                nn.Linear(dim_mlp, dim_mlp), nn.ReLU(),
+                nn.Linear(dim_mlp, out_dim))
+        else:
+            raise ValueError(f"Unknown proj_head '{proj_head}'. Choose: none, linear, mlp2, mlp3")
 
     def _get_basemodel(self, model_name):
         try:

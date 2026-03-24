@@ -57,6 +57,8 @@ parser.add_argument('--temperature', default=0.07, type=float,
 parser.add_argument('--n-views', default=2, type=int, metavar='N',
                     help='Number of views for contrastive learning training.')
 parser.add_argument('--gpu-index', default=0, type=int, help='Gpu index.')
+parser.add_argument('--proj-head', default='mlp2', choices=['none', 'linear', 'mlp2', 'mlp3'],
+                    help='Projection head type (default: mlp2)')
 
 
 def load_config(config_path):
@@ -89,6 +91,7 @@ def main():
             'workers':           config.get('workers', 2),
             'fp16_precision':    config.get('fp16_precision', False),
             'log_every_n_steps': config.get('log_every_n_steps', 100),
+            'proj_head':         config.get('proj_head', 'mlp2'),
         })
 
     args = parser.parse_args()
@@ -120,7 +123,8 @@ def main():
 
     # Use CIFAR stem (3x3 conv, no maxpool) for 32x32 CIFAR-10 images
     cifar_stem = (args.dataset_name == 'cifar10')
-    model = ResNetSimCLR(base_model=args.arch, out_dim=args.out_dim, cifar_stem=cifar_stem)
+    model = ResNetSimCLR(base_model=args.arch, out_dim=args.out_dim, cifar_stem=cifar_stem,
+                         proj_head=args.proj_head)
 
     # LARS optimizer as specified in proposal Section 4.2
     optimizer = LARS(model.parameters(), lr=args.lr, weight_decay=args.weight_decay,
