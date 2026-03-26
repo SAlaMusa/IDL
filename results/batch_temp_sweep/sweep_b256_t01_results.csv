@@ -1,0 +1,2 @@
+exp_name,batch,temperature,best_top1,checkpoint,timestamp
+sweep_b256_t01,256,0.1,74.75,/kaggle/working/sweep_b256_t01_ep100.pth.tar,2026-03-24 16:23
