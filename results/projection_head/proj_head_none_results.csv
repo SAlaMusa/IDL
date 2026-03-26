@@ -1,0 +1,2 @@
+exp_name,config,best_top1,checkpoint,timestamp
+proj_head_none,configs/proj_head_none.yaml,76.40,/kaggle/working/proj_head_none_ep200.pth.tar,2026-03-26 04:53
