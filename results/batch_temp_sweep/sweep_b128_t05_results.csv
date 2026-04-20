@@ -1,2 +1,6 @@
 exp_name,batch,temperature,best_top1,checkpoint,timestamp
+<<<<<<< HEAD
 sweep_b128_t05,128,0.5,74.17,/kaggle/working/sweep_b128_t05_ep100.pth.tar,2026-03-30 21:20
+=======
+sweep_b128_t05,128,0.5,73.87,/kaggle/working/sweep_b128_t05_ep100.pth.tar,2026-03-26 14:26
+>>>>>>> 62dc14bbc9f3c05ac5fc72e86048973b8f10817d
