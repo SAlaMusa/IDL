@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=conf_solarize
+#SBATCH --job-name=conf_moco_b128
 #SBATCH --account=cis260134p
 #SBATCH --partition=GPU-shared
 #SBATCH --gres=gpu:v100-32:1
@@ -8,8 +8,8 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=16G
 #SBATCH --array=0-2
-#SBATCH --output=/ocean/projects/cis260134p/mkipsang/IDL/logs/conf_solarize_%A_%a.out
-#SBATCH --error=/ocean/projects/cis260134p/mkipsang/IDL/logs/conf_solarize_%A_%a.err
+#SBATCH --output=/ocean/projects/cis260134p/mkipsang/IDL/logs/conf_moco_b128_%A_%a.out
+#SBATCH --error=/ocean/projects/cis260134p/mkipsang/IDL/logs/conf_moco_b128_%A_%a.err
 
 module load anaconda3
 conda activate simclr
@@ -20,9 +20,9 @@ mkdir -p logs results/confirmatory
 SEEDS=(42 43 44)
 SEED=${SEEDS[$SLURM_ARRAY_TASK_ID]}
 
-echo "==> Pretraining harmful_solarize seed=$SEED"
+echo "==> Pretraining MoCo v2 b128 seed=$SEED"
 BEFORE=$(ls -d runs/*/ 2>/dev/null | sort)
-python run.py --config configs/harmful_solarize.yaml --seed $SEED --epochs 800
+python run_moco.py --config configs/moco_b128.yaml --seed $SEED --epochs 800
 RUN_DIR=$(comm -13 <(echo "$BEFORE") <(ls -d runs/*/ 2>/dev/null | sort) | head -1)
 CKPT="${RUN_DIR}checkpoint_0800.pth.tar"
 
@@ -30,5 +30,5 @@ echo "==> Linear eval on $CKPT"
 python linear_eval.py --checkpoint $CKPT --dataset cifar10 \
     --arch resnet18 --epochs 100 -b 256 -j 4 --seed $SEED
 
-cp linear_eval_results.csv results/confirmatory/harmful_solarize_seed${SEED}.csv
-echo "==> Done. Saved results/confirmatory/harmful_solarize_seed${SEED}.csv"
+cp linear_eval_results.csv results/confirmatory/moco_b128_seed${SEED}.csv
+echo "==> Done. Saved results/confirmatory/moco_b128_seed${SEED}.csv"
