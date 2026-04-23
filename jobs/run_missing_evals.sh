@@ -20,8 +20,8 @@ for RUN_DIR in runs/*/; do
     CKPT="${RUN_DIR}checkpoint_0800.pth.tar"
     CONFIG="${RUN_DIR}config.yml"
 
-    # skip if no completed checkpoint or config
-    if [ ! -f "$CKPT" ] || [ ! -f "$CONFIG" ]; then
+    # skip if no completed checkpoint
+    if [ ! -f "$CKPT" ]; then
         continue
     fi
 
@@ -32,41 +32,23 @@ for RUN_DIR in runs/*/; do
         continue
     fi
 
-    # extract experiment info from config.yml
-    DATASET=$(python -c "
-import yaml, sys
-c = yaml.safe_load(open('$CONFIG'))
-if isinstance(c, dict):
-    print(c.get('dataset_name', 'cifar10'))
-else:
-    print(getattr(c, 'dataset_name', 'cifar10'))
-" 2>/dev/null || echo "cifar10")
+    # identify experiment from training.log
+    LOG="${RUN_DIR}training.log"
+    DATASET="cifar10"
+    SEED="unknown"
 
-    SEED=$(python -c "
-import yaml, sys
-c = yaml.safe_load(open('$CONFIG'))
-if isinstance(c, dict):
-    print(c.get('seed', 42))
-else:
-    print(getattr(c, 'seed', 42))
-" 2>/dev/null || echo "42")
+    if [ -f "$LOG" ]; then
+        # check if STL-10 (larger image size affects dataset)
+        grep -q "stl10" "$LOG" 2>/dev/null && DATASET="stl10"
+        # extract seed from log if present
+        SEED_LINE=$(grep -i "seed" "$LOG" 2>/dev/null | head -1)
+    fi
 
-    EXP=$(python -c "
-import yaml, os
-c = yaml.safe_load(open('$CONFIG'))
-if isinstance(c, dict):
-    cfg = c.get('config', '')
-else:
-    cfg = getattr(c, 'config', '')
-if cfg:
-    print(os.path.splitext(os.path.basename(str(cfg)))[0])
-else:
-    print(os.path.basename('$RUN_DIR'.rstrip('/')))
-" 2>/dev/null || echo "unknown")
+    # use run directory name as experiment identifier
+    EXP=$(basename "$RUN_DIR")
+    OUT="results/confirmatory/eval_${EXP}.csv"
 
-    OUT="results/confirmatory/${EXP}_seed${SEED}.csv"
-
-    # skip if we already have this result
+    # skip if already evaluated
     if [ -f "$OUT" ]; then
         echo "SKIP — already done: $OUT"
         continue
