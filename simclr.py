@@ -1,6 +1,5 @@
 import logging
 import os
-import sys
 
 import torch
 import torch.nn.functional as F
@@ -9,9 +8,6 @@ from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 from utils import save_config_file, accuracy, save_checkpoint
 
-torch.manual_seed(0)
-
-
 class SimCLR(object):
 
     def __init__(self, *args, **kwargs):
@@ -19,7 +15,8 @@ class SimCLR(object):
         self.model = kwargs['model'].to(self.args.device)
         self.optimizer = kwargs['optimizer']
         self.scheduler = kwargs['scheduler']
-        self.writer = SummaryWriter()
+        run_name = getattr(self.args, 'run_name', None)
+        self.writer = SummaryWriter(log_dir=run_name)
         logging.basicConfig(filename=os.path.join(self.writer.log_dir, 'training.log'), level=logging.DEBUG)
         self.criterion = torch.nn.CrossEntropyLoss().to(self.args.device)
 
@@ -32,15 +29,11 @@ class SimCLR(object):
         features = F.normalize(features, dim=1)
 
         similarity_matrix = torch.matmul(features, features.T)
-        # assert similarity_matrix.shape == (
-        #     self.args.n_views * self.args.batch_size, self.args.n_views * self.args.batch_size)
-        # assert similarity_matrix.shape == labels.shape
 
         # discard the main diagonal from both: labels and similarities matrix
         mask = torch.eye(labels.shape[0], dtype=torch.bool).to(self.args.device)
         labels = labels[~mask].view(labels.shape[0], -1)
         similarity_matrix = similarity_matrix[~mask].view(similarity_matrix.shape[0], -1)
-        # assert similarity_matrix.shape == labels.shape
 
         # select and combine multiple positives
         positives = similarity_matrix[labels.bool()].view(labels.shape[0], -1)
@@ -105,6 +98,16 @@ class SimCLR(object):
                 self.scheduler.step()
             logging.debug(f"Epoch: {epoch_counter}\tLoss: {loss}\tTop1 accuracy: {top1[0]}")
 
+            ep = epoch_counter + 1
+            if ep % 200 == 0 and ep < self.args.epochs:
+                ckpt_name = 'checkpoint_{:04d}.pth.tar'.format(ep)
+                save_checkpoint({
+                    'epoch': ep,
+                    'arch': self.args.arch,
+                    'state_dict': self.model.state_dict(),
+                    'optimizer': self.optimizer.state_dict(),
+                }, filename=os.path.join(self.writer.log_dir, ckpt_name))
+
         logging.info("Training has finished.")
         # save model checkpoints
         checkpoint_name = 'checkpoint_{:04d}.pth.tar'.format(self.args.epochs)
@@ -113,5 +116,5 @@ class SimCLR(object):
             'arch': self.args.arch,
             'state_dict': self.model.state_dict(),
             'optimizer': self.optimizer.state_dict(),
-        }, is_best=False, filename=os.path.join(self.writer.log_dir, checkpoint_name))
+        }, filename=os.path.join(self.writer.log_dir, checkpoint_name))
         logging.info(f"Model checkpoint and metadata has been saved at {self.writer.log_dir}.")

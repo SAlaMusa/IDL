@@ -33,6 +33,8 @@ parser.add_argument('--moco-queue-size', default=4096, type=int,
                     help='MoCo queue size (number of negative keys)')
 parser.add_argument('--moco-momentum', default=0.999, type=float,
                     help='MoCo key encoder EMA momentum')
+parser.add_argument('--run-name', default=None,
+                    help='Custom output directory for this run.')
 
 
 def load_config(path):

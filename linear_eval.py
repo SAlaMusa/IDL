@@ -1,4 +1,6 @@
 import argparse
+import csv
+import datetime
 import os
 
 import torch
@@ -28,6 +30,8 @@ parser.add_argument('--seed', default=42, type=int,
                     help='random seed for reproducibility')
 parser.add_argument('--disable-cuda', action='store_true',
                     help='disable CUDA even if available')
+parser.add_argument('--out', default='linear_eval_results.csv',
+                    help='path to write results CSV (default: linear_eval_results.csv)')
 
 
 def get_data_loaders(dataset_name, data_path, batch_size, workers):
@@ -200,9 +204,7 @@ def main():
 
     print(f"\nBest Test Top-1 Accuracy: {best_top1:.2f}%")
 
-    # Save results to a CSV so they persist even if the notebook session ends
-    import csv, datetime
-    results_path = "linear_eval_results.csv"
+    results_path = args.out
     write_header = not os.path.exists(results_path)
     with open(results_path, "a", newline="") as f:
         writer = csv.writer(f)

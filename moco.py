@@ -10,9 +10,6 @@ from tqdm import tqdm
 
 from utils import save_config_file, accuracy, save_checkpoint
 
-torch.manual_seed(0)
-
-
 class MoCo(object):
 
     def __init__(self, *args, **kwargs):
@@ -20,7 +17,8 @@ class MoCo(object):
         self.encoder_q = kwargs['model'].to(self.args.device)
         self.optimizer = kwargs['optimizer']
         self.scheduler = kwargs['scheduler']
-        self.writer = SummaryWriter()
+        run_name = getattr(self.args, 'run_name', None)
+        self.writer = SummaryWriter(log_dir=run_name)
         logging.basicConfig(
             filename=os.path.join(self.writer.log_dir, 'training.log'),
             level=logging.DEBUG
@@ -117,13 +115,22 @@ class MoCo(object):
 
             logging.debug(f"Epoch: {epoch_counter}\tLoss: {loss}\tTop1: {top1[0]}")
 
+            ep = epoch_counter + 1
+            if ep % 200 == 0 and ep < self.args.epochs:
+                ckpt_name = 'checkpoint_{:04d}.pth.tar'.format(ep)
+                save_checkpoint({
+                    'epoch': ep,
+                    'arch':  self.args.arch,
+                    'state_dict': self.encoder_q.state_dict(),
+                    'optimizer':  self.optimizer.state_dict(),
+                }, filename=os.path.join(self.writer.log_dir, ckpt_name))
+
         logging.info("Training has finished.")
         checkpoint_name = 'checkpoint_{:04d}.pth.tar'.format(self.args.epochs)
-        # Save encoder_q only — compatible with linear_eval.py
         save_checkpoint({
             'epoch': self.args.epochs,
             'arch':  self.args.arch,
             'state_dict': self.encoder_q.state_dict(),
             'optimizer':  self.optimizer.state_dict(),
-        }, is_best=False, filename=os.path.join(self.writer.log_dir, checkpoint_name))
+        }, filename=os.path.join(self.writer.log_dir, checkpoint_name))
         logging.info(f"Model checkpoint saved at {self.writer.log_dir}.")

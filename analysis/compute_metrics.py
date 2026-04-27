@@ -79,7 +79,7 @@ class TwoViewDataset(torch.utils.data.Dataset):
         return self.t(img), self.t(img)
 
 
-def get_dataset(name, root, transform):
+def get_dataset(name, root):
     if name == 'cifar10':
         return datasets.CIFAR10(root, train=True, download=True, transform=None)
     return datasets.STL10(root, split='unlabeled', download=True, transform=None)
@@ -132,7 +132,7 @@ def main():
         "--labels count must match --checkpoints count"
 
     t = _aug(args.dataset)
-    base_ds = get_dataset(args.dataset, args.data, transform=None)
+    base_ds = get_dataset(args.dataset, args.data)
     ds = TwoViewDataset(base_ds, t)
     loader = DataLoader(ds, batch_size=args.batch_size, shuffle=True,
                         num_workers=args.workers, pin_memory=True, drop_last=True)

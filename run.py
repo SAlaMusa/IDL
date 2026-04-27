@@ -59,6 +59,9 @@ parser.add_argument('--n-views', default=2, type=int, metavar='N',
 parser.add_argument('--gpu-index', default=0, type=int, help='Gpu index.')
 parser.add_argument('--proj-head', default='mlp2', choices=['none', 'linear', 'mlp2', 'mlp3'],
                     help='Projection head type (default: mlp2)')
+parser.add_argument('--run-name', default=None,
+                    help='Custom output directory for this run (e.g. runs/baseline_cifar10_seed42). '
+                         'Defaults to auto-generated timestamped directory.')
 
 
 def load_config(config_path):
@@ -96,6 +99,9 @@ def main():
 
     args = parser.parse_args()
     assert args.n_views == 2, "Only two view training is supported. Please use --n-views 2."
+
+    if args.seed is not None:
+        torch.manual_seed(args.seed)
 
     # Scaled learning rate: lr = 0.3 * batch_size / 256  (proposal Section 4.2)
     if args.lr is None:
