@@ -133,6 +133,7 @@ def main():
     cifar_stem = (args.dataset_name == 'cifar10')
     model = ResNetSimCLR(base_model=args.arch, out_dim=args.out_dim, cifar_stem=cifar_stem,
                          proj_head=args.proj_head)
+    model = model.to(args.device)
 
     # LARS optimizer as specified in proposal Section 4.2
     optimizer = LARS(model.parameters(), lr=args.lr, weight_decay=args.weight_decay,
