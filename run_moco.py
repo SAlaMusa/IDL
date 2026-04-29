@@ -35,6 +35,8 @@ parser.add_argument('--moco-momentum', default=0.999, type=float,
                     help='MoCo key encoder EMA momentum')
 parser.add_argument('--run-name', default=None,
                     help='Custom output directory for this run.')
+parser.add_argument('--resume', default=None, metavar='PATH',
+                    help='path to a checkpoint to resume training from')
 
 
 def load_config(path):
@@ -106,9 +108,21 @@ def main():
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
         optimizer, T_max=args.epochs, eta_min=0, last_epoch=-1)
 
+    start_epoch = 0
+    if args.resume:
+        print(f"=> Loading checkpoint '{args.resume}'")
+        ckpt = torch.load(args.resume, map_location=args.device)
+        start_epoch = ckpt['epoch']
+        model.load_state_dict(ckpt['state_dict'])
+        optimizer.load_state_dict(ckpt['optimizer'])
+        warmup_epochs = getattr(args, 'warmup_epochs', 10)
+        for _ in range(max(0, start_epoch - warmup_epochs)):
+            scheduler.step()
+        print(f"=> Resumed from epoch {start_epoch}")
+
     with torch.cuda.device(args.gpu_index):
         moco = MoCo(model=model, optimizer=optimizer, scheduler=scheduler, args=args)
-        moco.train(train_loader)
+        moco.train(train_loader, start_epoch=start_epoch)
 
 
 if __name__ == "__main__":

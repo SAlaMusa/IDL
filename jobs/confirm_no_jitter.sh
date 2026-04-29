@@ -3,7 +3,7 @@
 #SBATCH --account=cis260134p
 #SBATCH --partition=GPU-shared
 #SBATCH --gres=gpu:v100-32:1
-#SBATCH --time=10:00:00
+#SBATCH --time=20:00:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=16G
@@ -24,8 +24,19 @@ OUT="results/confirmatory/ablation_no_jitter_seed${SEED}.csv"
 
 python -c "import torch; assert torch.cuda.is_available(), 'No GPU!'; print('GPU:', torch.cuda.get_device_name(0))" || exit 1
 
-echo "==> Pretraining ablation_no_jitter seed=$SEED -> $RUN_NAME"
-python run.py --config configs/ablation_no_jitter.yaml --seed $SEED --epochs 800 --run-name $RUN_NAME
+FINAL_CKPT="${RUN_NAME}/checkpoint_0800.pth.tar"
+if [ -f "$FINAL_CKPT" ]; then
+    echo "==> Pretraining already complete, skipping."
+else
+    LAST_CKPT=$(ls "${RUN_NAME}"/checkpoint_0[0-9]*.pth.tar 2>/dev/null | sort -V | grep -v 'checkpoint_0800' | tail -1)
+    if [ -n "$LAST_CKPT" ]; then
+        echo "==> Resuming from $LAST_CKPT"
+        python run.py --config configs/ablation_no_jitter.yaml --seed $SEED --epochs 800 --run-name $RUN_NAME --resume "$LAST_CKPT"
+    else
+        echo "==> Starting ablation_no_jitter seed=$SEED from scratch"
+        python run.py --config configs/ablation_no_jitter.yaml --seed $SEED --epochs 800 --run-name $RUN_NAME
+    fi
+fi
 
 CKPT="${RUN_NAME}/checkpoint_0800.pth.tar"
 echo "==> Linear eval on $CKPT"

@@ -75,15 +75,17 @@ class MoCo(object):
         self._dequeue_and_enqueue(k)
         return logits, labels
 
-    def train(self, train_loader):
+    def train(self, train_loader, start_epoch=0):
         scaler = GradScaler('cuda', enabled=self.args.fp16_precision)
         save_config_file(self.writer.log_dir, self.args)
 
-        n_iter = 0
+        n_iter = start_epoch * len(train_loader)
         logging.info(f"Start MoCo v2 training for {self.args.epochs} epochs.")
+        if start_epoch > 0:
+            logging.info(f"Resuming from epoch {start_epoch}.")
         logging.info(f"Queue size: {self.queue_size}  Momentum: {self.momentum}")
 
-        for epoch_counter in range(self.args.epochs):
+        for epoch_counter in range(start_epoch, self.args.epochs):
             for images, _ in tqdm(train_loader):
                 im_q = images[0].to(self.args.device)
                 im_k = images[1].to(self.args.device)

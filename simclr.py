@@ -47,18 +47,20 @@ class SimCLR(object):
         logits = logits / self.args.temperature
         return logits, labels
 
-    def train(self, train_loader):
+    def train(self, train_loader, start_epoch=0):
 
         scaler = GradScaler('cuda', enabled=self.args.fp16_precision)
 
         # save config file
         save_config_file(self.writer.log_dir, self.args)
 
-        n_iter = 0
+        n_iter = start_epoch * len(train_loader)
         logging.info(f"Start SimCLR training for {self.args.epochs} epochs.")
+        if start_epoch > 0:
+            logging.info(f"Resuming from epoch {start_epoch}.")
         logging.info(f"Training with gpu: {self.args.disable_cuda}.")
 
-        for epoch_counter in range(self.args.epochs):
+        for epoch_counter in range(start_epoch, self.args.epochs):
             for images, _ in tqdm(train_loader):
                 images = torch.cat(images, dim=0)
 
