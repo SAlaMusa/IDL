@@ -2,7 +2,7 @@
 #SBATCH --job-name=convergence
 #SBATCH --account=cis260134p
 #SBATCH --partition=GPU-shared
-#SBATCH --gres=gpu:h100-80:1
+#SBATCH --gres=gpu:v100-32:1
 #SBATCH --time=03:00:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
