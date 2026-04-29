@@ -2,7 +2,7 @@
 #SBATCH --job-name=conf_moco_b128
 #SBATCH --account=cis260134p
 #SBATCH --partition=GPU-shared
-#SBATCH --gres=gpu:v100-32:1
+#SBATCH --gres=gpu:h100-80:1
 #SBATCH --time=20:00:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
